@@ -161,7 +161,7 @@ Simulation<-function(mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
 }
 
 # run simulations
-mu1=0.5
+mu1=0.4
 mu2=0
 mu3=0.3
 mu4=0
