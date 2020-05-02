@@ -1,25 +1,5 @@
-
-# let's consider the case where K=2
-# assume we have calculated the test statistics T1, T2
-# T1 and T2 are both vectors with 2 elements 
-# the first element is the test statistics of interim analysis 
-# the second element is the test statistics of final analysis
-# let Nmax be the max number of sample size
-# let N be the real sample size needed
-# let D (a vector of lenth 2)be the decision for hypothesis 1 and 2
-# D[1]=0, accept hypothesis 1, D[1]=1, reject hypothesis 1
-# D[2]=0, accept hypothesis 2, D[2]=1, reject hypothesis 2
-
-# if we use GSHv (group sequential Holm variable)
-# this means if we reject hypothesis 1 at interim stage,
-# we will use boundaries in B instead of B2 for hypothesis 2 
-# for interim analysis and for the final analysis (if necessary)
-# similar for hypothesis 1 if we reject hypothesis 2 at interim stage
-# if we reject hypothesis 1 at final stage, 
-# then we will use boundaries in B instead of B2 for final analysis 
-# for hypothesis 2
-# similar for hypothesis 1 if we reject hypothesis 2 at final stage
-
+library(shiny)
+library(DT)
 Decision<-function(T1, T2, B1, B2, B, Nmax=1){
   # we can reject both hypothesis at interim analysis
   if ((T1[1]>B1[1]) & (T2[1]>B2[1])){
@@ -160,11 +140,10 @@ Simulation<-function(mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
                     'Stopatmid'=Stopatmid/Iterations))
 }
 
-
 Combine<-function(w1list,mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
                   sigma3=1, sigma4=1, N, w1=0.5,w2=0.5, alpha=0.025, Method='OF', 
                   Iterations=200 )
-  {
+{
   LEN=length(w1list)
   # generate a dataframe to store the result
   # value in Result represent the probability
@@ -192,8 +171,6 @@ Combine<-function(w1list,mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
   return(Result)
 }
 
-
-
 # generate a function for plotting
 PLOT<-function(df){
   library(ggplot2)
@@ -208,28 +185,128 @@ PLOT<-function(df){
   p<-p+theme(axis.title.x = element_text(size=14))
   p<-p+theme(axis.title.y = element_text(size=14))
   p<-p+ylim(0,1)
-  p
+  return(p)
+}
+
+# get each elements from a list
+GET<-function(X){
+  LEN<-length(X)
+  temp<-c()
+  for (i in 1:LEN){
+    temp<-append(temp, X[i])
+  }
+  return(temp)
 }
 
 
+# x <- as.numeric(unlist(strsplit(input$vec1,",")))
+shinyServer(function(input, output) {
+  # create a variable to make sure the plot will disappear if you change the input
+  # also the plot will not appear unitl you hit the run button
+  Hv<-reactiveValues(doPlot = FALSE)
+  
+  observeEvent(input$RunInput, {
+    # 0 will be coerced to FALSE
+    # 1+ will be coerced to TRUE
+    Hv$doPlot <- input$RunInput
+  })
+  
+  observeEvent(input$MethodInput,{Hv$doPlot <- FALSE})
+  observeEvent(input$w1listInput,{Hv$doPlot <- FALSE})
+  observeEvent(input$sigma2Input,{Hv$doPlot <- FALSE})
+  observeEvent(input$sigma4Input,{Hv$doPlot <- FALSE})
+  observeEvent(input$IterationsInput,{Hv$doPlot <- FALSE})
+  observeEvent(input$mu1Input,{Hv$doPlot <- FALSE})
+  observeEvent(input$mu3Input,{Hv$doPlot <- FALSE})
+  observeEvent(input$NInput,{Hv$doPlot <- FALSE})
+  observeEvent(input$sigma1Input,{Hv$doPlot <- FALSE})
+  observeEvent(input$sigma3Input,{Hv$doPlot <- FALSE})
+  observeEvent(input$alphaInput,{Hv$doPlot <- FALSE})
+  observeEvent(input$mu2Input,{Hv$doPlot <- FALSE})
+  observeEvent(input$mu4Input,{Hv$doPlot <- FALSE})
+  
+  # define a function to convert textinput to numberic vector
+  Convert<-function(X){
+    return(as.numeric(unlist(strsplit(X,","))))
+  }
+  W1list<-reactive({
+    req(input$w1listInput)
+    Convert(input$w1listInput)
+  })
+  
+  # create a function to run simulation and return the result
+  Simu<-function(){
+      isolate({
+        R<-Combine(w1list=W1list(),mu1=input$mu1Input, mu2=input$mu2Input, 
+                                    mu3=input$mu3Input, mu4=input$mu4Input, 
+                                    sigma1=input$sigma1Input, sigma2=input$sigma2Input, 
+                                    sigma3=input$sigma3Input, sigma4=input$sigma4Input,
+                                    N=input$NInput, w1=w1list[j],w2=1-w1list[j], 
+                                    alpha=input$alphaInput, Method=input$MethodInput, 
+                                    Iterations=input$IterationsInput)
+        })
+  }
+  
+  #get the data
+  DF<-reactive({
+    if (!(Hv$doPlot==FALSE)){
+      Simu()
+    }
+  })
+  
+  # provide the option to select the term to show
+  output$Plotterms<-renderUI({
+    req(DF())
+    if (!(Hv$doPlot==FALSE)){
+      # selectInput('PlottermsInput', 'Select the term(s) to plot',
+      #                    c("Reject both hypotheses"='Rej_both',
+      #                      "Reject at least one hypothesis"='Rej_atleast_one',
+      #                      "Reject hypothesis 1"="Rej_1",
+      #                      "Reject hypothesis 2"="Rej_2",
+      #                      "No Rejection"="No_rej",
+      #                      "Trial stops in the middle"="Stopatmid"),
+      #                    selected = 'Rej_both', multiple = TRUE)
+  #     selectInput('PlottermsInput', 'Select the term(s) to plot',
+  #                        c('Rej_both',
+  #                          'Rej_atleast_one',
+  #                          "Rej_1",
+  #                          "Rej_2",
+  #                          "No_rej",
+  #                          "Stopatmid"),
+  #                        selected = 'Rej_both', multiple = TRUE, selectize=TRUE)
+      checkboxGroupInput('PlottermsInput', 'Select the term(s) to plot',
+                         choiceNames = c("Reject both hypotheses",
+                                        "Reject at least one hypothesis",
+                                        "Reject hypothesis 1",
+                                        "Reject hypothesis 2",
+                                        "No Rejection",
+                                        "Trial stops in the middle"),
+                         choiceValues =c('Rej_both', 'Rej_atleast_one',"Rej_1",
+                                        "Rej_2","No_rej","Stopatmid"),
+                         selected = 'Rej_both', inline = TRUE)
+    }
+  })
 
-# run simulations
-mu1=0.4
-mu2=0
-mu3=0.3
-mu4=0
-sigma1=sigma2=sigma3=sigma4=1
-alpha=0.025
-# set the number of data for each group
-N=100
-# which boundries to use, 'OF' or 'Pocock'
-Method='OF'
-# how many iterations/simulations to run
-Iterations=100
-# the list of w1 we want to test
-w1list=c(0.1,0.2, 0.9)
+  # start to generate the plot
+  # get the part of data to plot
+  
+  Var<-reactive({
+    req(input$PlottermsInput)
+    GET(input$PlottermsInput)
+  })
 
-Test<-Combine(w1list=w1list, mu1=1, mu3=0.2, N=20, Iterations = 50)
-DF<-Test[Test$variable %in% c('Stopatmid'),]
-
-PLOT(df=DF)
+  Pdata<-reactive({
+    req(DF())
+    DF()[DF()$variable %in% Var(),]
+  })
+  
+  P<-function(){
+    isolate({return(PLOT(df=Pdata()))})
+    }
+  
+  output$PLOTout<-renderPlot({
+    req(Pdata())
+    PLOT(df=Pdata())
+  })
+  
+})
