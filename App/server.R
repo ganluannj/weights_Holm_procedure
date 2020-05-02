@@ -201,6 +201,16 @@ GET<-function(X){
 
 # x <- as.numeric(unlist(strsplit(input$vec1,",")))
 shinyServer(function(input, output) {
+  
+  output$Hypothesis <- renderUI({
+    withMathJax(
+      helpText('Data $$\\large{X_{i} \\sim N(\\mu_i, \\sigma^2_i), i=1,2,3,4 }$$'),
+      helpText('Hypothesis 1 $$\\large{H_0: \\mu_1=\\mu_2, 
+               H_{\\alpha}: \\mu_1>\\mu_2 }$$', width='40%'),
+      helpText('Hypothesis 2 $$\\large{H_0: \\mu_3=\\mu_4, 
+               H_{\\alpha}: \\mu_3>\\mu_4 }$$')
+    )
+  })
   # create a variable to make sure the plot will disappear if you change the input
   # also the plot will not appear unitl you hit the run button
   Hv<-reactiveValues(doPlot = FALSE)
@@ -308,5 +318,30 @@ shinyServer(function(input, output) {
     req(Pdata())
     PLOT(df=Pdata())
   })
+  
+  # download option for plot
+  output$plotdownload<-renderUI({
+    req(Pdata())
+    downloadButton('PREplotdownload', "Download the plot")
+  })
+  
+  output$PREplotdownload <- downloadHandler(
+    filename <- paste0("plot",".jpeg"),
+    content <- function(file) {
+      req(Pdata())
+      ggsave(file, plot=P())
+    })
+  
+  # download option for data
+  output$Datadown<-renderUI({
+    req(Pdata())
+    downloadButton('Datadownload', "Download the data")
+  })
+  
+  output$Datadownload<-downloadHandler(
+    filename = function(){paste("Data", ".csv")},
+    content =function(file){
+      write.csv(DF(), file, row.names = FALSE)
+    })
   
 })
