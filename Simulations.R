@@ -162,7 +162,7 @@ Simulation<-function(mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
 
 
 Combine<-function(w1list,mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
-                  sigma3=1, sigma4=1, N, w1=0.5,w2=0.5, alpha=0.025, Method='OF', 
+                  sigma3=1, sigma4=1, N, alpha=0.025, Method='OF', 
                   Iterations=200 )
   {
   LEN=length(w1list)

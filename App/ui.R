@@ -2,7 +2,7 @@ shinyUI(fluidPage(
   
   # enter the title
   column(8,offset = 3, 
-         titlePanel("Weight allocation for weighted Holm procedure")),
+         titlePanel("Weight allocation for Group sequential Holm procedure")),
   hr(),
   br(),
   # titlePanel("Weight allocation for weighted Holm procedure"),
@@ -30,13 +30,10 @@ shinyUI(fluidPage(
     column(3,offset = 0,
            numericInput("sigma2Input",HTML("&sigma;<sub>2</sup>") , value = 1),
            numericInput("sigma4Input",HTML("&sigma;<sub>4</sup>") , value = 1),
-           numericInput("IterationsInput", 'Simulations number', value=100, min=5)
+           textInput('w1listInput', 'Enter weight 1 (comma delimited)', value="0.1,0.2,0.3,0.4,0.5,0.6, 0.7, 0.8,0.9")
     )
   ),
   
-  textInput('w1listInput', 'Enter weight 1 (comma delimited)', value="0.1,0.3,0.5, 0.7, 0.9",
-            width = '50%'),
-
   # actionButton("RunInput", "Run Simulation", width='50%'),
   column(5, offset=3, 
          actionButton("RunInput", "Run Simulation", icon("paper-plane"), width = '100%',
@@ -44,7 +41,7 @@ shinyUI(fluidPage(
   hr(),
   br(),
   # provide the option for users to select which terms to plot
-  column(12, tags$h5(uiOutput("Plotterms"))),
+  column(12, tags$h4(uiOutput("Plotterms"))),
   hr(),
   br(),
   column(10,offset=3, plotOutput("PLOTout", width = "60%")),
