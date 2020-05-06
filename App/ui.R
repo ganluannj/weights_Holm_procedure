@@ -30,13 +30,13 @@ shinyUI(fluidPage(
     column(3,offset = 0,
            numericInput("sigma2Input",HTML("&sigma;<sub>2</sup>") , value = 1),
            numericInput("sigma4Input",HTML("&sigma;<sub>4</sup>") , value = 1),
-           textInput('w1listInput', 'Enter weight 1 (comma delimited)', value="0.1,0.2,0.3,0.4,0.5,0.6, 0.7, 0.8,0.9")
+           textInput('w1listInput', 'Enter weight A (comma delimited)', value="0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9")
     )
   ),
   
   # actionButton("RunInput", "Run Simulation", width='50%'),
   column(5, offset=3, 
-         actionButton("RunInput", "Run Simulation", icon("paper-plane"), width = '100%',
+         actionButton("RunInput", "Run", icon("paper-plane"), width = '100%',
                       style="color: #fff; background-color: #337ab7; border-color: #2e6da4")),
   hr(),
   br(),
@@ -51,6 +51,5 @@ shinyUI(fluidPage(
   )
   # uiOutput("plotdownload"),
   # uiOutput('Datadown')
-  
 )
 )

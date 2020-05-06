@@ -1,5 +1,7 @@
 library(shiny)
 library(DT)
+library(gsDesign)
+library(mvtnorm)
 Decision<-function(T1, T2, B1, B2, B, Nmax=1){
   # we can reject both hypothesis at interim analysis
   if ((T1[1]>B1[1]) & (T2[1]>B2[1])){
@@ -178,15 +180,17 @@ Calculation<-function(w1list,mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
   # generate a dataframe to store the result
   # value in Result represent the probability
   Result<-data.frame('w1'=w1list, 'w2'=1-w1list, 'Rej_both'=rep(0, LEN), 
-                     'Rej_1_only'=rep(0, LEN), 'Rej_2_only'=rep(0, LEN),
+                     'Rej_A_only'=rep(0, LEN), 'Rej_B_only'=rep(0, LEN),
                      'No_rej'=rep(0, LEN),
-                     'Rej_atleast_one'=rep(0, LEN),'Rej_1'=rep(0,LEN), 
-                     'Rej_2'=rep(0, LEN))
+                     'Rej_atleast_one'=rep(0, LEN),'Rej_A'=rep(0,LEN), 
+                     'Rej_B'=rep(0, LEN))
   
   Delta1=mu1-mu2
   Delta2=mu3-mu4
-  Mean1=c(sqrt(N)*Delta1/2, sqrt(N)*Delta1/sqrt(2))
-  Mean2=c(sqrt(N)*Delta2/2, sqrt(N)*Delta2/sqrt(2))
+  sigmatilde1=sqrt(sigma1^2+sigma2^2)
+  sigmatilde2=sqrt(sigma3^2+sigma4^2)
+  Mean1=c(sqrt(N)*Delta1/(sqrt(2)*sigmatilde1), sqrt(N)*Delta1/sigmatilde1)
+  Mean2=c(sqrt(N)*Delta2/(sqrt(2)*sigmatilde2), sqrt(N)*Delta2/sigmatilde2)
   V<-c(1, sqrt(1/2), sqrt(1/2),1)
   M<-matrix(V, nrow=2)
   B<-gsDesign(k=2, alpha=alpha,test.type=1,sfu=Method)$upper$bound
@@ -224,7 +228,7 @@ Calculation<-function(w1list,mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
     p2<-pmvnorm(lower=c(-Inf, -Inf), upper = c(B2[1], B[2]), mean=Mean2, sigma=M)[[1]]
     pfinal<-p1*p2
     ponlyA<-pmid+pfinal
-    Result[i,'Rej_1_only']<-ponlyA
+    Result[i,'Rej_A_only']<-ponlyA
     
     ###############################################################################
     ############### Reject only 2 (B)       ##########################################
@@ -240,15 +244,15 @@ Calculation<-function(w1list,mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
     p2<-pmvnorm(lower=c(-Inf, B2[2]), upper = c(B2[1], Inf), mean=Mean2, sigma=M)[[1]]
     pfinal<-p1*p2
     ponlyB<-pmid+pfinal
-    Result[i,'Rej_2_only']<-ponlyB
+    Result[i,'Rej_B_only']<-ponlyB
     
     #################################
     Rejboth<-patleast1-ponlyA-ponlyB
     Rej1<-ponlyA+Rejboth
     Rej2<-ponlyB+Rejboth
     Result[i,'Rej_both']<-Rejboth
-    Result[i,'Rej_1']<-Rej1
-    Result[i,'Rej_2']<-Rej2
+    Result[i,'Rej_A']<-Rej1
+    Result[i,'Rej_B']<-Rej2
     Result[i, 'No_rej']<-1-patleast1
   }
   
@@ -362,8 +366,8 @@ shinyServer(function(input, output) {
                                         "Reject hypothesis A",
                                         "Reject hypothesis B",
                                         "No Rejection"),
-                         choiceValues =c('Rej_both', 'Rej_atleast_one',"Rej_1",
-                                        "Rej_2","No_rej"),
+                         choiceValues =c('Rej_both', 'Rej_atleast_one',"Rej_A",
+                                        "Rej_B","No_rej"),
                          selected = 'Rej_both', inline = TRUE)
     }
   })
@@ -393,7 +397,7 @@ shinyServer(function(input, output) {
   # download option for plot
   output$plotdownload<-renderUI({
     req(Pdata())
-    downloadButton('PREplotdownload', "Download the plot")
+    downloadButton('PREplotdownload', "Download plot")
   })
   
   output$PREplotdownload <- downloadHandler(
@@ -406,7 +410,7 @@ shinyServer(function(input, output) {
   # download option for data
   output$Datadown<-renderUI({
     req(Pdata())
-    downloadButton('Datadownload', "Download the data")
+    downloadButton('Datadownload', "Download data")
   })
   
   output$Datadownload<-downloadHandler(

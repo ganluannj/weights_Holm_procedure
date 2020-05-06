@@ -1,7 +1,9 @@
 
 Calculation<-function(w1list,mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
                   sigma3=1, sigma4=1, N, alpha=0.05, Method='OF')
-{
+{ 
+  library(gsDesign)
+  library(mvtnorm)
   LEN=length(w1list)
   # generate a dataframe to store the result
   # value in Result represent the probability
@@ -13,8 +15,10 @@ Calculation<-function(w1list,mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
   
   Delta1=mu1-mu2
   Delta2=mu3-mu4
-  Mean1=c(sqrt(N)*Delta1/2, sqrt(N)*Delta1/sqrt(2))
-  Mean2=c(sqrt(N)*Delta2/2, sqrt(N)*Delta2/sqrt(2))
+  sigmatilde1=sqrt(sigma1^2+sigma2^2)
+  sigmatilde2=sqrt(sigma3^2+sigma4^2)
+  Mean1=c(sqrt(N)*Delta1/(sqrt(2)*sigmatilde1), sqrt(N)*Delta1/sigmatilde1)
+  Mean2=c(sqrt(N)*Delta2/(sqrt(2)*sigmatilde2), sqrt(N)*Delta2/sigmatilde2)
   V<-c(1, sqrt(1/2), sqrt(1/2),1)
   M<-matrix(V, nrow=2)
   B<-gsDesign(k=2, alpha=alpha,test.type=1,sfu=Method)$upper$bound
@@ -88,7 +92,8 @@ Calculation<-function(w1list,mu1, mu2=0, mu3, mu4=0, sigma1=1, sigma2=1,
 }
 
 
-w1list=c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9)
+#w1list=c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9)
+w1list=c(0.1,0.2)
 Result<-Calculation(w1list=w1list, mu1=0.2, mu2=0, mu3=0.2, mu4=0, sigma1=1, sigma2=1,
                     sigma3=1, sigma4=1, N=150, alpha=0.05, Method='OF')
 
